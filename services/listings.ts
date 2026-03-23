@@ -8,39 +8,30 @@ export async function getListingsByCategory(categorySlug: string) {
 
   console.log("🔍 Fetching category slug:", categorySlug);
 
-  // ✅ safer than .single()
   const { data: category, error: categoryError } = await supabase
     .from("categories")
     .select("id, slug")
     .eq("slug", categorySlug)
     .maybeSingle();
 
-  if (categoryError) {
-    console.error("❌ Category fetch error:", categoryError.message);
+  if (categoryError || !category) {
+    console.error("❌ Category error:", categoryError?.message);
     return [];
   }
 
-  if (!category) {
-    console.error("❌ Category NOT FOUND for slug:", categorySlug);
-    return [];
-  }
-
-  console.log("✅ Category found:", category);
-
-  // ✅ Fetch listings
   const { data, error } = await supabase
     .from("listings")
     .select(`
       id,
       title,
       slug,
-      base_price,
+      price,
       city,
       state,
-      category:categories(slug)
+      categories (slug)
     `)
     .eq("category_id", category.id)
-    .eq("status", "published");
+    .eq("is_published", true); // ✅ FIXED
 
   if (error) {
     console.error("❌ Listings fetch error:", error.message);
@@ -69,7 +60,7 @@ export async function getListingBySlug(slug: string) {
       )
     `)
     .eq("slug", slug)
-    .eq("status", "published")
+    .eq("is_published", true)
     .maybeSingle(); // ✅ safer
 
   if (error) {
