@@ -8,6 +8,7 @@ export async function getListingsByCategory(categorySlug: string) {
 
   console.log("🔍 Fetching category slug:", categorySlug);
 
+  // 1. Get category
   const { data: category, error: categoryError } = await supabase
     .from("categories")
     .select("id, slug")
@@ -19,7 +20,8 @@ export async function getListingsByCategory(categorySlug: string) {
     return [];
   }
 
-  const { data, error } = await supabase
+  // 2. Fetch listings (existing)
+  const { data: listings, error: listingsError } = await supabase
     .from("listings")
     .select(`
       id,
@@ -31,16 +33,49 @@ export async function getListingsByCategory(categorySlug: string) {
       categories (slug)
     `)
     .eq("category_id", category.id)
-    .eq("is_published", true); // ✅ FIXED
+    .eq("is_published", true);
 
-  if (error) {
-    console.error("❌ Listings fetch error:", error.message);
-    return [];
+  if (listingsError) {
+    console.error("❌ Listings fetch error:", listingsError.message);
   }
 
-  console.log("✅ Listings fetched:", data?.length);
+  // 3. Fetch activities if category is adventures
+  let activities: any[] = [];
 
-  return data || [];
+  if (categorySlug === "adventures") {
+    const { data: activitiesData, error: activitiesError } = await supabase
+      .from("activities")
+      .select("*")
+      .eq("is_active", true);
+
+    if (activitiesError) {
+      console.error("❌ Activities fetch error:", activitiesError.message);
+    }
+
+    activities = (activitiesData || []).map((item) => ({
+      id: item.id,
+      title: item.title,
+      slug: item.slug,
+      price: item.selling_price,
+      city: item.location,
+      state: "",
+      categories: { slug: "adventures" },
+      type: "activity",
+    }));
+  }
+
+  // 4. Add type to listings
+  const formattedListings = (listings || []).map((item) => ({
+    ...item,
+    type: "listing",
+  }));
+
+  // 5. Merge both
+  const finalData = [...formattedListings, ...activities];
+
+  console.log("✅ Final merged data:", finalData.length);
+
+  return finalData;
 }
 
 /* =========================
@@ -91,4 +126,48 @@ export async function getListingBySlug(slug: string) {
     ...listing,
     rooms: rooms || [],
   };
+}
+
+/* =========================
+   GET ACTIVITIES
+========================= */
+export async function getActivities() {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("activities")
+    .select("*")
+    .eq("is_active", true);
+
+  if (error) {
+    console.error("❌ Activities fetch error:", error.message);
+    return [];
+  }
+
+  return data || [];
+}
+
+/* =========================
+   GET SINGLE ACTIVITY
+========================= */
+export async function getActivityBySlug(slug: string) {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("activities")
+    .select("*")
+    .eq("slug", slug)
+    .maybeSingle();
+
+  if (error) {
+    console.error("❌ Activity fetch error:", error.message);
+    return null;
+  }
+
+  if (!data) {
+    console.error("❌ Activity NOT FOUND:", slug);
+    return null;
+  }
+
+  return data;
 }

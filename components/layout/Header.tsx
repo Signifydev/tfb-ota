@@ -12,17 +12,17 @@ const categories = [
 
   { id: "adventures", icon: "landscape", label: ["Adventure Activities"], href: "/listings/adventures" },
 
-  { id: "trekking", icon: "hiking", label: ["Trekking & Camps"], href: "/listings/trekking" },
-
-  { id: "retreats", icon: "event", label: ["Retreats & Events"], href: "/listings/retreats" },
-
-  { id: "yoga", icon: "spa", label: ["Yoga & Meditation"], href: "/listings/yoga" },
-
   { id: "chardham", icon: "temple_hindu", label: ["Char Dham"], href: "/listings/char-dham" },
 
   { id: "helicopter", icon: "helicopter", label: ["Helicopter Services"], href: "/listings/helicopter" },
 
   { id: "bike", icon: "two_wheeler", label: ["Bike Expedition"], href: "/listings/bike-expedition" },
+
+  { id: "trekking", icon: "hiking", label: ["Trekking & Camps"], href: "/listings/trekking" },
+
+  { id: "yoga", icon: "spa", label: ["Yoga & Meditation"], href: "/listings/yoga" },
+
+  { id: "retreats", icon: "event", label: ["Retreats & Events"], href: "/listings/retreats" },
 
   { id: "volunteering", icon: "volunteer_activism", label: ["Volunteering"], href: "/listings/volunteering" },
 
@@ -39,6 +39,34 @@ export default function Header() {
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
 
   const dotsRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const isDown = useRef(false);
+const startX = useRef(0);
+const scrollLeftPos = useRef(0);
+
+const handleMouseDown = (e: React.MouseEvent) => {
+  if (!scrollRef.current) return;
+  isDown.current = true;
+  startX.current = e.pageX - scrollRef.current.offsetLeft;
+  scrollLeftPos.current = scrollRef.current.scrollLeft;
+};
+
+const handleMouseLeave = () => {
+  isDown.current = false;
+};
+
+const handleMouseUp = () => {
+  isDown.current = false;
+};
+
+const handleMouseMove = (e: React.MouseEvent) => {
+  if (!isDown.current || !scrollRef.current) return;
+  e.preventDefault();
+  const x = e.pageX - scrollRef.current.offsetLeft;
+  const walk = (x - startX.current) * 1.5; // speed
+  scrollRef.current.scrollLeft = scrollLeftPos.current - walk;
+};
 
   useEffect(() => {
     const handleScroll = () => {
@@ -50,8 +78,15 @@ export default function Header() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const visibleCategories = categories.slice(0, 6);
-  const hiddenCategories = categories.slice(6);
+  const scrollLeft = () => {
+  scrollRef.current?.scrollBy({ left: -200, behavior: "smooth" });
+};
+
+const scrollRight = () => {
+  scrollRef.current?.scrollBy({ left: 200, behavior: "smooth" });
+};
+
+ 
 
   /* ================= HEADER ONE ================= */
 
@@ -66,15 +101,16 @@ export default function Header() {
 
         <div className="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
 
-          <Link href="/">
-            <Image
-              src="/logo.png"
-              alt="Travel For Benefits"
-              width={150}
-              height={55}
-              priority
-            />
-          </Link>
+          <div className="flex items-center flex-shrink-0">
+  <Link href="/">
+    <Image
+      src="/logo.png"
+      alt="Travel For Benefits"
+      width={120}
+      height={40}
+    />
+  </Link>
+</div>
 
           <div className="flex items-center gap-4">
 
@@ -104,7 +140,7 @@ export default function Header() {
 
       <div className="hidden md:block w-full bg-transparent -mt-4 pb-6">
 
-        <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow-md px-6 py-5">
+        <div className="max-w-6xl mx-auto bg-white/80 backdrop-blur-md rounded-2xl shadow-lg px-6 py-5 border border-white/30">
 
           <div className="flex items-center justify-between">
 
@@ -160,7 +196,7 @@ export default function Header() {
 
   const HeaderTwo = (
     <div
-      className={`fixed top-0 left-0 w-full z-50 bg-white border-b shadow-sm transition-all duration-300 ${
+      className={`fixed top-0 left-0 w-full z-50 bg-white/80 backdrop-blur-md border-b shadow-sm transition-all duration-300 ${
         isHome
   ? scrolled
     ? "opacity-100 translate-y-0"
@@ -169,7 +205,7 @@ export default function Header() {
       }`}
     >
 
-      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
 
         <Link href="/">
           <Image
@@ -182,74 +218,57 @@ export default function Header() {
 
         {/* Desktop Menu */}
 
-        <div className="hidden md:flex items-center gap-6 relative">
+        <div className="hidden md:flex items-center justify-center flex-1 gap-2">
 
-          {visibleCategories.map((cat) => {
+          {/* Left Arrow */}
+<button
+  onClick={scrollLeft}
+  className="w-9 h-9 flex items-center justify-center rounded-full bg-white shadow-md hover:shadow-lg border border-gray-200 transition flex-shrink-0"
+>
+  <span className="material-symbols-outlined">chevron_left</span>
+</button>
 
-            const isActive = pathname.startsWith(cat.href);
+{/* Scrollable Menu */}
+<div
+  ref={scrollRef}
+  onMouseDown={handleMouseDown}
+  onMouseLeave={handleMouseLeave}
+  onMouseUp={handleMouseUp}
+  onMouseMove={handleMouseMove}
+  className="flex gap-5 overflow-x-auto no-scrollbar scroll-smooth cursor-grab active:cursor-grabbing max-w-[800px]"
+>
+  {categories.map((cat) => {
+    const isActive = pathname.startsWith(cat.href);
 
-            return (
-              <Link
-                key={cat.id}
-                href={cat.href}
-                className={`flex items-center gap-1 border-b-2 pb-1 ${
-                  isActive
-                    ? "border-[#f4b400]"
-                    : "border-transparent hover:border-[#f4b400]"
-                }`}
-              >
-                <span className="material-symbols-outlined text-[22px]">
-                  {cat.icon}
-                </span>
+    return (
+      <Link
+        key={cat.id}
+        href={cat.href}
+        className={`flex items-center gap-2 px-3 py-2 rounded-full whitespace-nowrap transition-all ${
+          isActive
+            ? "bg-[#f4b400]/10 text-[#f4b400]"
+            : "hover:bg-gray-100 text-slate-700"
+        }`}
+      >
+        <span className="material-symbols-outlined text-[18px]">
+          {cat.icon}
+        </span>
 
-                <span className="text-sm font-medium">
-                  {cat.label[0]}
-                </span>
+        <span className="text-sm font-medium">
+          {cat.label[0]}
+        </span>
+      </Link>
+    );
+  })}
+</div>
 
-              </Link>
-            );
-          })}
-
-          {/* More Dropdown */}
-
-          <div
-            className="relative"
-            onMouseEnter={() => setMoreOpen(true)}
-            onMouseLeave={() => setMoreOpen(false)}
-          >
-
-            <div className="flex items-center gap-1 border-b-2 border-transparent pb-1 hover:border-[#f4b400] cursor-pointer">
-
-              <span className="text-sm font-medium">
-                More
-              </span>
-
-              <span className="material-symbols-outlined text-[18px]">
-                expand_more
-              </span>
-
-            </div>
-
-            {moreOpen && (
-
-              <div className="absolute left-0 top-full w-56 bg-white rounded-xl shadow-lg border py-2">
-
-                {hiddenCategories.map((cat) => (
-                  <Link
-                    key={cat.id}
-                    href={cat.href}
-                    className="block px-4 py-2 text-sm hover:bg-slate-50"
-                  >
-                    {cat.label.join(" ")}
-                  </Link>
-                ))}
-
-              </div>
-
-            )}
-
-          </div>
-
+{/* Right Arrow */}
+<button
+  onClick={scrollRight}
+  className="w-9 h-9 flex items-center justify-center rounded-full bg-white shadow-md hover:shadow-lg border border-gray-200 transition flex-shrink-0"
+>
+  <span className="material-symbols-outlined">chevron_right</span>
+</button>
         </div>
 
         {/* Mobile Horizontal Menu */}
@@ -270,7 +289,7 @@ export default function Header() {
 
         </div>
 
-        <div className="hidden md:flex items-center gap-4">
+        <div className="hidden md:flex items-center flex-shrink-0">
 
           <Link
             href="/login"
