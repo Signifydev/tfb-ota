@@ -108,15 +108,15 @@ const [showFilters, setShowFilters] = useState(false);
   }
 
   // ✅ Price Filter
-  filtered = filtered.filter(l => l.base_price <= maxPrice);
+  filtered = filtered.filter(l => l.price <= maxPrice);
 
   // ✅ Sorting
   if (sortOption === "low-high") {
-    filtered.sort((a, b) => a.base_price - b.base_price);
+    filtered.sort((a, b) => a.price - b.price);
   }
 
   if (sortOption === "high-low") {
-    filtered.sort((a, b) => b.base_price - a.base_price);
+    filtered.sort((a, b) => b.price - a.price);
   }
 
   setFilteredListings(filtered);
@@ -302,7 +302,7 @@ useEffect(() => {
                     id: listing.id,
                     title: listing.title,
                     slug: listing.slug,
-                    base_price: listing.base_price,
+                    price: listing.price,
                     city: listing.city,
                     state: listing.state,
                     category_slug: category,

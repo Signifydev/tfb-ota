@@ -26,18 +26,16 @@ export async function getListingsByCategoryClient(categorySlug: string) {
       id,
       title,
       slug,
-      base_price,
+      price,
       city,
       state,
-      property_type,
-      amenities,
       rating,
       listing_images (
         image_url
       )
     `)
     .eq("category_id", category.id)
-    .eq("status", "published");
+    .eq("is_published", true); // ✅ FIXED
 
   if (error) {
     console.error("❌ Listings error:", error.message);

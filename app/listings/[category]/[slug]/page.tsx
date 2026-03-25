@@ -1,3 +1,4 @@
+
 import { getListingBySlug } from "@/services/listings";
 import Image from "next/image";
 import BookingSection from "@/components/BookingSection";
@@ -66,14 +67,69 @@ export default async function ListingDetailPage({
             </p>
           </div>
 
-          {/* ✅ BOOKING SECTION (ONLY FOR STAYS) */}
-          {isStay && (
-            <BookingSection
-              rooms={listing.rooms || []}
-              basePrice={listing.base_price}
-              listingId={listing.id}
-            />
-          )}
+          {/* ✅ BOOKING + ROOMS LAYOUT */}
+{isStay && (
+  <div className="grid grid-cols-1 lg:grid-cols-10 gap-8 mt-10">
+
+    {/* LEFT - ROOMS (70%) */}
+    <div className="lg:col-span-7">
+      <h2 className="text-2xl font-bold mb-6">
+        Choose your Room
+      </h2>
+
+      <div className="space-y-6">
+        {(listing.rooms || []).map((room: any, i: number) => (
+          <div
+            key={i}
+            className="bg-white rounded-2xl shadow p-5 flex flex-col md:flex-row gap-4"
+          >
+            {/* Room Image */}
+            <div className="relative w-full md:w-[220px] h-[160px] rounded-xl overflow-hidden">
+              <Image
+                src={
+                  room.images?.[0] ||
+                  "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2"
+                }
+                alt={room.name}
+                fill
+                className="object-cover"
+              />
+            </div>
+
+            {/* Room Info */}
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold">{room.name}</h3>
+
+              <p className="text-gray-500 text-sm mb-2">
+                {room.description || "Comfortable stay with modern amenities"}
+              </p>
+
+              <p className="text-sm text-gray-600">
+                Capacity: {room.capacity || 2} Guests
+              </p>
+
+              <p className="mt-3 font-semibold text-lg">
+                ₹{room.price}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    {/* RIGHT - STICKY BOOKING (30%) */}
+    <div className="lg:col-span-3">
+      <div className="sticky top-[120px]">
+        <BookingSection
+          rooms={listing.rooms || []}
+          basePrice={listing.base_price}
+          listingId={listing.id}
+        />
+      </div>
+    </div>
+
+  </div>
+)}
 
           {/* 🚀 BIKE EXPEDITION SECTION */}
           {listing.expedition_data && (

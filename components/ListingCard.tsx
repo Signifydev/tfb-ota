@@ -44,7 +44,7 @@ export default function ListingCard({ listing }: ListingCardProps) {
           <div className="flex justify-between items-center pt-4 border-t">
 
             <span className="text-[#f4b400] font-extrabold text-lg">
-              ₹{listing.base_price?.toLocaleString()}
+              ₹{listing.price?.toLocaleString()}
               <span className="text-sm text-slate-400 font-normal">
                 {" "} / night
               </span>

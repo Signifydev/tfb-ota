@@ -90,18 +90,18 @@ export default async function HomePage() {
 
                   {listings.slice(0, 8).map((listing: any) => (
                     <ListingCard
-                      key={listing.id}
-                      listing={{
-                        id: listing.id,
-                        title: listing.title,
-                        slug: listing.slug,
-                        base_price: listing.base_price,
-                        city: listing.city,
-                        state: listing.state,
-                        category_slug: section.category_slug,
-                        listing_images: listing.listing_images
-                      }}
-                    />
+  key={listing.id}
+  listing={{
+    id: listing.id,
+    title: listing.title,
+    slug: listing.slug,
+    price: listing.price, // ✅ FIXED
+    city: listing.city,
+    state: listing.state,
+    category_slug: section.category_slug,
+    listing_images: listing.listing_images
+  }}
+/>
                   ))}
 
                 </div>
