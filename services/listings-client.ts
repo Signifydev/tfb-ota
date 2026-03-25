@@ -19,8 +19,8 @@ export async function getListingsByCategoryClient(categorySlug: string) {
     return [];
   }
 
-  // 2. Get listings
-  const { data, error } = await supabase
+  // 2. Fetch listings (OLD)
+  const { data: listings, error: listingsError } = await supabase
     .from("listings")
     .select(`
       id,
@@ -30,17 +30,54 @@ export async function getListingsByCategoryClient(categorySlug: string) {
       city,
       state,
       rating,
-      listing_images (
-        image_url
-      )
+      listing_images (image_url)
     `)
     .eq("category_id", category.id)
-    .eq("is_published", true); // ✅ FIXED
+    .eq("is_published", true);
 
-  if (error) {
-    console.error("❌ Listings error:", error.message);
-    return [];
+  if (listingsError) {
+    console.error("❌ Listings error:", listingsError.message);
   }
 
-  return data || [];
+  // 3. Fetch activities (NEW)
+  let activities: any[] = [];
+
+  if (categorySlug === "adventures") {
+    const { data: activitiesData, error: activitiesError } = await supabase
+      .from("activities")
+      .select("*")
+      .eq("is_active", true);
+
+    if (activitiesError) {
+      console.error("❌ Activities error:", activitiesError.message);
+    }
+
+    activities = (activitiesData || []).map((item) => ({
+  id: item.id,
+  title: item.title,
+  slug: item.slug,
+  price: item.selling_price,
+  city: item.location,
+  state: "",
+  categories: { slug: "adventures" },
+  type: "activity",
+
+  listing_images: item.gallery?.length
+    ? item.gallery.map((url: string) => ({ image_url: url }))
+    : [],
+}));
+  }
+
+  // 4. Add type to listings
+  const formattedListings = (listings || []).map((item) => ({
+    ...item,
+    type: "listing",
+  }));
+
+  // 5. Merge both
+  const finalData = [...formattedListings, ...activities];
+
+  console.log("✅ FINAL DATA:", finalData.length);
+
+  return finalData;
 }

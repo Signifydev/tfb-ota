@@ -306,7 +306,8 @@ useEffect(() => {
                     city: listing.city,
                     state: listing.state,
                     category_slug: category,
-                    listing_images: listing.listing_images
+                    listing_images: listing.listing_images,
+                    type: listing.type,
                   }}
                 />
               ))}
