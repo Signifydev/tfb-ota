@@ -45,26 +45,71 @@ export default function Header() {
 const startX = useRef(0);
 const scrollLeftPos = useRef(0);
 
+const isDragging = useRef(false);
+const velocity = useRef(0);
+const lastX = useRef(0);
+const animationFrame = useRef<number | null>(null);
+
 const handleMouseDown = (e: React.MouseEvent) => {
   if (!scrollRef.current) return;
+
   isDown.current = true;
+  isDragging.current = false;
+
   startX.current = e.pageX - scrollRef.current.offsetLeft;
   scrollLeftPos.current = scrollRef.current.scrollLeft;
+
+  lastX.current = e.pageX;
+  velocity.current = 0;
+
+  // stop any ongoing animation
+  if (animationFrame.current) {
+    cancelAnimationFrame(animationFrame.current);
+  }
+
+  document.body.style.userSelect = "none";
 };
 
 const handleMouseLeave = () => {
-  isDown.current = false;
+  if (isDown.current) {
+    handleMouseUp(); // reuse inertia
+  }
 };
 
 const handleMouseUp = () => {
   isDown.current = false;
+  document.body.style.userSelect = "auto";
+
+  // 👉 START INERTIA
+  const momentum = () => {
+    if (!scrollRef.current) return;
+
+    scrollRef.current.scrollLeft -= velocity.current;
+
+    velocity.current *= 0.95; // friction
+
+    if (Math.abs(velocity.current) > 0.5) {
+      animationFrame.current = requestAnimationFrame(momentum);
+    }
+  };
+
+  momentum();
 };
 
 const handleMouseMove = (e: React.MouseEvent) => {
   if (!isDown.current || !scrollRef.current) return;
+
   e.preventDefault();
+
+  isDragging.current = true;
+
   const x = e.pageX - scrollRef.current.offsetLeft;
-  const walk = (x - startX.current) * 1.5; // speed
+  const walk = (x - startX.current) * 1.2;
+
+  // calculate velocity
+  velocity.current = e.pageX - lastX.current;
+  lastX.current = e.pageX;
+
   scrollRef.current.scrollLeft = scrollLeftPos.current - walk;
 };
 
@@ -235,16 +280,23 @@ const scrollRight = () => {
   onMouseLeave={handleMouseLeave}
   onMouseUp={handleMouseUp}
   onMouseMove={handleMouseMove}
-  className="flex gap-5 overflow-x-auto no-scrollbar scroll-smooth cursor-grab active:cursor-grabbing max-w-[800px]"
+  className="flex gap-5 overflow-x-auto no-scrollbar scroll-smooth cursor-grab active:cursor-grabbing max-w-[800px] select-none touch-pan-x"
 >
   {categories.map((cat) => {
     const isActive = pathname.startsWith(cat.href);
 
     return (
       <Link
-        key={cat.id}
-        href={cat.href}
-        className={`flex items-center gap-2 px-3 py-2 rounded-full whitespace-nowrap transition-all ${
+  key={cat.id}
+  href={cat.href}
+  draggable={false}
+  onDragStart={(e) => e.preventDefault()}
+  onClick={(e) => {
+    if (isDragging.current) {
+      e.preventDefault(); // ❌ stop accidental navigation
+    }
+  }}
+  className={`flex items-center gap-2 px-3 py-2 rounded-full whitespace-nowrap transition-all ${
           isActive
             ? "bg-[#f4b400]/10 text-[#f4b400]"
             : "hover:bg-gray-100 text-slate-700"

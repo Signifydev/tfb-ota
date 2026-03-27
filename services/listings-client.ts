@@ -81,3 +81,25 @@ export async function getListingsByCategoryClient(categorySlug: string) {
 
   return finalData;
 }
+/* =========================
+   GET SINGLE LISTING (CLIENT)
+========================= */
+export async function getListingBySlugClient(slug: string) {
+
+  const { data, error } = await supabase
+    .from("listings")
+    .select(`
+      *,
+      listing_images(*),
+      rooms(*)
+    `)
+    .eq("slug", slug)
+    .maybeSingle();
+
+  if (error) {
+    console.error("❌ Listing fetch error:", error.message);
+    return null;
+  }
+
+  return data;
+}

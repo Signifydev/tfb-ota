@@ -13,7 +13,7 @@ const handleSubmit = async (e: any) => {
 
   const payload = {
   listing_id: listingId,
-  room_name: selectedRoom?.name || "",
+  room_name: selectedRoom?.name || "Not Selected",
   full_name: formData.get("full_name"),
   phone: formData.get("phone"),
   email: formData.get("email"),
@@ -54,10 +54,26 @@ if (data.success) {
     </p>
 
     {selectedRoom && (
-      <div className="mb-4 text-sm bg-gray-100 p-3 rounded-lg">
-        Selected: <strong>{selectedRoom.name}</strong>
-      </div>
-    )}
+  <div className="mb-4 p-3 rounded-lg border bg-green-50">
+
+    <p className="text-sm text-gray-600">Selected Room</p>
+
+    <p className="font-semibold text-green-700">
+      {selectedRoom.name}
+    </p>
+
+    <p className="text-xs text-gray-500">
+      ₹{selectedRoom.price} / night
+    </p>
+
+  </div>
+)}
+
+{!selectedRoom && (
+  <div className="mb-4 text-sm text-red-500">
+    Please select a room to continue
+  </div>
+)}
 
     <form onSubmit={handleSubmit} className="space-y-4">
 
@@ -101,9 +117,16 @@ if (data.success) {
         name="room_type"
       />
 
-      <button className="w-full bg-black text-white py-3 rounded-xl font-medium">
-        Request Booking
-      </button>
+      <button
+  disabled={!selectedRoom}
+  className={`w-full py-3 rounded-xl font-medium ${
+    selectedRoom
+      ? "bg-black text-white"
+      : "bg-gray-300 text-gray-500 cursor-not-allowed"
+  }`}
+>
+  {selectedRoom ? "Request Booking" : "Select a Room First"}
+</button>
 
     </form>
 
