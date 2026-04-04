@@ -20,23 +20,23 @@ export async function getListingsByCategory(categorySlug: string) {
     return [];
   }
 
-  // 2. Fetch listings (existing)
+  // 2. Fetch listings
   const { data: listings, error: listingsError } = await supabase
-  .from("listings")
-  .select(`
-    id,
-    title,
-    slug,
-    price,
-    city,
-    state,
-    categories (slug),
-    listing_images (
-      image_url
-    )
-  `)
-  .eq("category_id", category.id)
-  .eq("is_published", true);
+    .from("listings")
+    .select(`
+      id,
+      title,
+      slug,
+      price,
+      city,
+      state,
+      categories (slug),
+      listing_images (
+        image_url
+      )
+    `)
+    .eq("category_id", category.id)
+    .eq("is_published", true);
 
   if (listingsError) {
     console.error("❌ Listings fetch error:", listingsError.message);
@@ -56,37 +56,36 @@ export async function getListingsByCategory(categorySlug: string) {
     }
 
     activities = (activitiesData || []).map((item) => {
-  let gallery = item.gallery;
+      let gallery = item.gallery;
 
-  // ✅ Fix string JSON issue
-  if (typeof gallery === "string") {
-    try {
-      gallery = JSON.parse(gallery);
-    } catch (err) {
-      console.error("❌ Gallery parse failed:", gallery);
-      gallery = [];
-    }
-  }
+      // Fix JSON string issue
+      if (typeof gallery === "string") {
+        try {
+          gallery = JSON.parse(gallery);
+        } catch (err) {
+          console.error("❌ Gallery parse failed:", gallery);
+          gallery = [];
+        }
+      }
 
-  return {
-    id: item.id,
-    title: item.title,
-    slug: item.slug,
-    price: item.selling_price,
-    city: item.location,
-    state: "",
-    categories: { slug: "adventures" },
-    type: "activity",
-    
+      return {
+        id: item.id,
+        title: item.title,
+        slug: item.slug,
+        price: item.selling_price,
+        city: item.location,
+        state: "",
+        categories: { slug: "adventures" },
+        type: "activity",
 
-    // ✅ FINAL FIX
-    listing_images: Array.isArray(gallery) && gallery.length > 0
-      ? gallery.map((url: string) => ({ image_url: url }))
-      : item.image_url
-      ? [{ image_url: item.image_url }]
-      : [],
-  };
-});
+        listing_images:
+          Array.isArray(gallery) && gallery.length > 0
+            ? gallery.map((url: string) => ({ image_url: url }))
+            : item.image_url
+            ? [{ image_url: item.image_url }]
+            : [],
+      };
+    });
   }
 
   // 4. Add type to listings
@@ -121,7 +120,7 @@ export async function getListingBySlug(slug: string) {
     `)
     .eq("slug", slug)
     .eq("is_published", true)
-    .maybeSingle(); // ✅ safer
+    .maybeSingle();
 
   if (error) {
     console.error("❌ Listing fetch error:", error.message);
@@ -135,7 +134,7 @@ export async function getListingBySlug(slug: string) {
 
   console.log("✅ Listing found:", listing.id);
 
-  // ✅ Fetch rooms safely
+  // Fetch rooms
   const { data: rooms, error: roomsError } = await supabase
     .from("rooms")
     .select("*")
@@ -173,26 +172,30 @@ export async function getActivities() {
 }
 
 /* =========================
-   GET SINGLE ACTIVITY
+   GET SINGLE ACTIVITY (FIXED)
 ========================= */
 export async function getActivityBySlug(slug: string) {
   const supabase = await createClient();
 
+  console.log("🔍 Incoming slug:", slug);
+
+  if (!slug) return null;
+
+  const cleanSlug = slug.trim().toLowerCase();
+
   const { data, error } = await supabase
     .from("activities")
     .select("*")
-    .eq("slug", slug)
-    .maybeSingle();
+    .eq("slug", cleanSlug) // ✅ FIXED
+    .eq("is_active", true)
+    .maybeSingle(); // ✅ FIXED
 
-  if (error) {
-    console.error("❌ Activity fetch error:", error.message);
-    return null;
-  }
+  console.log("📦 Query result:", data);
+  console.log("❌ Error:", error);
 
-  if (!data) {
-    console.error("❌ Activity NOT FOUND:", slug);
-    return null;
-  }
+  if (error) return null;
 
-  return data;
+  if (!data) return null;
+
+  return data; // ✅ FIXED
 }

@@ -81,6 +81,26 @@ export async function getListingsByCategoryClient(categorySlug: string) {
 
   return finalData;
 }
+
+export async function getActivityBySlugClient(slug: string) {
+  
+
+  if (!slug) return null;
+
+  const { data, error } = await supabase
+    .from("activities")
+    .select("*")
+    .eq("slug", slug)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (error) {
+    console.error("❌ Activity fetch error:", error.message);
+    return null;
+  }
+
+  return data;
+}
 /* =========================
    GET SINGLE LISTING (CLIENT)
 ========================= */

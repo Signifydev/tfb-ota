@@ -5,6 +5,8 @@ import { getListingBySlugClient } from "@/services/listings-client";
 import Image from "next/image";
 import BookingSection from "@/components/BookingSection";
 import { useParams } from "next/navigation";
+import TourPackageSection from "@/components/TourPackageSection";
+import ExpeditionSection from "@/components/ExpeditionSection";
 
 export default function ListingDetailPage() {
 
@@ -24,6 +26,8 @@ export default function ListingDetailPage() {
   }
 };
 const [listing, setListing] = useState<any>(null);
+const [showGallery, setShowGallery] = useState(false);
+const [activeImage, setActiveImage] = useState(0);
 
   useEffect(() => {
   const fetchListing = async () => {
@@ -72,35 +76,53 @@ useEffect(() => {
     <main className="pt-[120px] pb-16 bg-gray-50">
 
       {/* ✅ IMAGE GALLERY */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-2 px-6 mb-8">
+<div className="grid grid-cols-1 md:grid-cols-4 gap-2 px-6 mb-8">
 
-        <div className="relative md:col-span-2 md:row-span-2 h-[460px] rounded-2xl overflow-hidden">
-          <Image
-            src={
-              listing.listing_images?.[0]?.image_url ||
-              "https://images.unsplash.com/photo-1501785888041-af3ef285b470"
-            }
-            alt={listing.title}
-            fill
-            className="object-cover"
-          />
-          <button className="absolute bottom-3 right-3 bg-white text-black text-sm px-3 py-1 rounded-lg shadow">
-  View all photos
-</button>
-        </div>
+  <div
+    className="relative md:col-span-2 md:row-span-2 h-[460px] rounded-2xl overflow-hidden cursor-pointer"
+    onClick={() => {
+      setActiveImage(0);
+      setShowGallery(true);
+    }}
+  >
+    <Image
+      src={listing.listing_images?.[0]?.image_url}
+      alt={listing.title}
+      fill
+      className="object-cover"
+    />
 
-        {(listing.listing_images || []).slice(1, 5).map((img: any, i: number) => (
-          <div key={i} className="relative h-[220px] rounded-2xl overflow-hidden">
-            <Image src={img.image_url} alt="Listing" fill className="object-cover" />
-          </div>
-        ))}
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        setShowGallery(true);
+      }}
+      className="absolute bottom-3 right-3 bg-white text-black text-sm px-3 py-1 rounded-lg shadow"
+    >
+      View all photos
+    </button>
+  </div>
 
-      </div>
+  {(listing.listing_images || []).slice(1, 5).map((img: any, i: number) => (
+    <div
+      key={i}
+      className="relative h-[220px] rounded-2xl overflow-hidden cursor-pointer"
+      onClick={() => {
+        setActiveImage(i + 1);
+        setShowGallery(true);
+      }}
+    >
+      <Image src={img.image_url} alt="Listing" fill className="object-cover" />
+    </div>
+  ))}
+
+</div>
 
       {/* CONTENT */}
       <div className="max-w-7xl mx-auto px-6">
         {/* ✅ STICKY NAVIGATION */}
-<div className="sticky top-[80px] z-40 bg-white border-b mb-8">
+{isStay && (
+  <div className="sticky top-[80px] z-40 bg-white border-b mb-8">
 
   <div className="flex gap-6 text-sm font-medium overflow-x-auto">
 
@@ -151,8 +173,11 @@ useEffect(() => {
   </div>
 
 </div>
+)}
 
-        <h1 className="text-3xl font-bold mb-2">{listing.title}</h1>
+        {isStay && (
+  <h1 className="text-3xl font-bold mb-2">{listing.title}</h1>
+)}
 
 {/* ✅ KEY INFO BAR */}
 <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 mb-6">
@@ -196,7 +221,8 @@ useEffect(() => {
         <div className="space-y-10">
 
           {/* ABOUT */}
-          <div id="overview">
+          {isStay && (
+  <div id="overview">
             <h2 className="text-xl font-semibold mb-3">
               About this stay
             </h2>
@@ -204,7 +230,7 @@ useEffect(() => {
               {listing.description ||
                 "Enjoy a premium stay experience with comfort, scenic views, and top-class amenities."}
             </p>
-          </div>
+          </div>)}
 
           {/* ✅ AMENITIES SECTION */}
 {listing.amenities && listing.amenities.length > 0 && (
@@ -328,6 +354,18 @@ useEffect(() => {
 
   </div>
 )}
+
+
+          {/* 🚀 TOUR PACKAGE SECTION */}
+{category === "tour-packages" && (
+  <TourPackageSection listing={listing} />
+)}
+
+{/* 🚀 BIKE EXPEDITION */}
+{category === "bike-expedition" && (
+  <ExpeditionSection listing={listing} />
+)}
+
 <div id="location" className="mt-10">
 
   <h2 className="text-xl font-semibold mb-4">
@@ -355,82 +393,51 @@ useEffect(() => {
 
 </div>
 
-          {/* 🚀 BIKE EXPEDITION SECTION */}
-          {listing.expedition_data && (
-            <div className="mt-10">
-
-              <h2 className="text-2xl font-bold mb-6">
-                Bike Expedition Packages
-              </h2>
-
-              {listing.expedition_data.packages?.map((pkg: any, index: number) => (
-                <div
-                  key={index}
-                  className="mb-8 p-4 bg-white rounded-xl shadow"
-                >
-
-                  <h3 className="text-xl font-semibold">{pkg.name}</h3>
-                  <p className="text-gray-600 mb-4">{pkg.route}</p>
-
-                  {/* Variants */}
-                  <h4 className="font-semibold">Variants</h4>
-                  {pkg.variants?.map((v: any, i: number) => (
-                    <p key={i}>
-                      {v.name} - ₹{v.price}
-                    </p>
-                  ))}
-
-                  {/* Departures */}
-                  <h4 className="font-semibold mt-4">Departure Dates</h4>
-                  {pkg.departures?.map((d: string, i: number) => (
-                    <p key={i}>{d}</p>
-                  ))}
-
-                  {/* Itinerary */}
-                  {pkg.itinerary && (
-                    <>
-                      <h4 className="font-semibold mt-4">Itinerary</h4>
-                      {pkg.itinerary.map((day: any) => (
-                        <p key={day.day}>
-                          Day {day.day}: {day.title}
-                        </p>
-                      ))}
-                    </>
-                  )}
-
-                </div>
-              ))}
-
-              {/* Inclusions */}
-              {listing.expedition_data.inclusions && (
-                <>
-                  <h3 className="text-xl font-semibold mt-6">Inclusions</h3>
-                  <ul className="list-disc pl-5 text-gray-600">
-                    {listing.expedition_data.inclusions.map((i: string, idx: number) => (
-                      <li key={idx}>{i}</li>
-                    ))}
-                  </ul>
-                </>
-              )}
-
-              {/* Exclusions */}
-              {listing.expedition_data.exclusions && (
-                <>
-                  <h3 className="text-xl font-semibold mt-6">Exclusions</h3>
-                  <ul className="list-disc pl-5 text-gray-600">
-                    {listing.expedition_data.exclusions.map((e: string, idx: number) => (
-                      <li key={idx}>{e}</li>
-                    ))}
-                  </ul>
-                </>
-              )}
-
-            </div>
-          )}
 
         </div>
 
       </div>
+
+    {/* ✅ FULLSCREEN GALLERY */}
+{showGallery && (
+  <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center">
+
+    <button
+      onClick={() => setShowGallery(false)}
+      className="absolute top-5 right-5 text-white text-3xl"
+    >
+      ✕
+    </button>
+
+    <img
+      src={listing.listing_images?.[activeImage]?.image_url}
+      className="max-h-[80vh] rounded-lg"
+    />
+
+    <button
+      onClick={() =>
+        setActiveImage((prev) =>
+          prev === 0 ? listing.listing_images.length - 1 : prev - 1
+        )
+      }
+      className="absolute left-5 text-white text-3xl"
+    >
+      ‹
+    </button>
+
+    <button
+      onClick={() =>
+        setActiveImage((prev) =>
+          prev === listing.listing_images.length - 1 ? 0 : prev + 1
+        )
+      }
+      className="absolute right-5 text-white text-3xl"
+    >
+      ›
+    </button>
+
+  </div>
+)}
       
 
     </main>

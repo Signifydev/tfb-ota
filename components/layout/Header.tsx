@@ -8,7 +8,7 @@ import { usePathname } from "next/navigation";
 const categories = [
   { id: "stays", icon: "bed", label: ["Stays"], href: "/listings/stays" },
 
-  { id: "tours", icon: "travel_explore", label: ["Tour Packages"], href: "/listings/tours" },
+  { id: "tours", icon: "travel_explore", label: ["Tour Packages"], href: "/listings/tour-packages" },
 
   { id: "adventures", icon: "landscape", label: ["Adventure Activities"], href: "/listings/adventures" },
 
